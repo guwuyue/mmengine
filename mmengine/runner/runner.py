@@ -21,28 +21,29 @@ import mmengine
 from mmengine.config import Config, ConfigDict
 from mmengine.dataset import COLLATE_FUNCTIONS, worker_init_fn
 from mmengine.device import get_device
-from mmengine.dist import (broadcast, get_dist_info, get_rank, init_dist,
-                           is_distributed, master_only)
+from mmengine.dist import (
+    broadcast, get_dist_info, get_rank, init_dist, is_distributed, master_only)
 from mmengine.evaluator import Evaluator
 from mmengine.fileio import FileClient, join_path
 from mmengine.hooks import Hook
 from mmengine.logging import MessageHub, MMLogger, print_log
-from mmengine.model import (MMDistributedDataParallel, convert_sync_batchnorm,
-                            is_model_wrapper, revert_sync_batchnorm)
-from mmengine.optim import (OptimWrapper, OptimWrapperDict, _ParamScheduler,
-                            build_optim_wrapper)
-from mmengine.registry import (DATA_SAMPLERS, DATASETS, EVALUATOR, HOOKS,
-                               LOG_PROCESSORS, LOOPS, MODEL_WRAPPERS, MODELS,
-                               OPTIM_WRAPPERS, PARAM_SCHEDULERS, RUNNERS,
-                               VISUALIZERS, DefaultScope)
+from mmengine.model import (
+    MMDistributedDataParallel, convert_sync_batchnorm, is_model_wrapper,
+    revert_sync_batchnorm)
+from mmengine.optim import (
+    OptimWrapper, OptimWrapperDict, _ParamScheduler, build_optim_wrapper)
+from mmengine.registry import (
+    DATA_SAMPLERS, DATASETS, EVALUATOR, HOOKS, LOG_PROCESSORS, LOOPS,
+    MODEL_WRAPPERS, MODELS, OPTIM_WRAPPERS, PARAM_SCHEDULERS, RUNNERS,
+    VISUALIZERS, DefaultScope)
 from mmengine.utils import digit_version, get_git_hash, is_seq_of
-from mmengine.utils.dl_utils import (TORCH_VERSION, collect_env,
-                                     set_multi_processing)
+from mmengine.utils.dl_utils import (
+    TORCH_VERSION, collect_env, set_multi_processing)
 from mmengine.visualization import Visualizer
 from .base_loop import BaseLoop
-from .checkpoint import (_load_checkpoint, _load_checkpoint_to_model,
-                         find_latest_checkpoint, get_state_dict,
-                         save_checkpoint, weights_to_cpu)
+from .checkpoint import (
+    _load_checkpoint, _load_checkpoint_to_model, find_latest_checkpoint,
+    get_state_dict, save_checkpoint, weights_to_cpu)
 from .log_processor import LogProcessor
 from .loops import EpochBasedTrainLoop, IterBasedTrainLoop, TestLoop, ValLoop
 from .priority import Priority, get_priority
@@ -262,6 +263,41 @@ class Runner:
         experiment_name: Optional[str] = None,
         cfg: Optional[ConfigType] = None,
     ):
+        """
+        初始化相关代码主要试下以下功能：
+        基础环境配置：setup_env，设置随机种子 set_randomness，获取 default_scope (如 mmdet、mmcls 等)
+        实例化 log_processor、logger、message_hub、visualizer、model 等模块
+        注册各类钩子 hooks (默认自带的 default_hooks 以及用户自定义的 custom_hooks )
+        模块延迟初始化 Lazy Initialization，如不同的 dataloader，仅当对应流程真正启动时，才需要完整实例化
+        Args:
+            model: 用以训练和验证的模型，需要满足特定的接口需求
+            work_dir: 工作路径，用以保存训练日志、权重文件信息
+            train_dataloader: 训练数据加载器，需要满足 PyTorch 数据加载器协议
+            val_dataloader: 验证数据加载器，需要满足 PyTorch 数据加载器协议
+            test_dataloader:
+            train_cfg: 训练配置，用于指定训练周期、验证间隔等信息
+            val_cfg: 验证配置，用于指定验证所需要的额外参数
+            test_cfg:
+            auto_scale_lr:
+            optim_wrapper: 优化器包装，用于模型优化，并提供 AMP、梯度累积等附加功能
+            param_scheduler:
+            val_evaluator: 用于验证的评测器，这里使用默认评测器，并评测指标
+            test_evaluator:
+            default_hooks:
+            custom_hooks:
+            data_preprocessor:
+            load_from:
+            resume:
+            launcher:
+            env_cfg:
+            log_processor:
+            log_level:
+            visualizer:
+            default_scope:
+            randomness:
+            experiment_name:
+            cfg:
+        """
         self._work_dir = osp.abspath(work_dir)
         mmengine.mkdir_or_exist(self._work_dir)
 
@@ -410,15 +446,16 @@ class Runner:
         # register hooks to `self._hooks`
         self.register_hooks(default_hooks, custom_hooks)
         # log hooks information
-        self.logger.info(f'Hooks will be executed in the following '
-                         f'order:\n{self.get_hooks_info()}')
+        self.logger.info(
+            f'Hooks will be executed in the following '
+            f'order:\n{self.get_hooks_info()}')
 
         # dump `cfg` to `work_dir`
         self.dump_config()
 
     @classmethod
     def from_cfg(cls, cfg: ConfigType) -> 'Runner':
-        """Build a runner from config.
+        """Build a runner from config.  调用了类方法完成 Runner 的初始化
 
         Args:
             cfg (ConfigType): A config used for building runner. Keys of
@@ -648,8 +685,8 @@ class Runner:
         timestamp = torch.tensor(time.time(), dtype=torch.float64)
         # broadcast timestamp from 0 process to other processes
         broadcast(timestamp)
-        self._timestamp = time.strftime('%Y%m%d_%H%M%S',
-                                        time.localtime(timestamp.item()))
+        self._timestamp = time.strftime(
+            '%Y%m%d_%H%M%S', time.localtime(timestamp.item()))
 
         # https://github.com/pytorch/pytorch/issues/973
         # set resource limit
@@ -661,13 +698,14 @@ class Runner:
             soft_limit = min(
                 max(env_cfg.get('resource_limit', 4096), base_soft_limit),
                 hard_limit)
-            resource.setrlimit(resource.RLIMIT_NOFILE,
-                               (soft_limit, hard_limit))
+            resource.setrlimit(
+                resource.RLIMIT_NOFILE, (soft_limit, hard_limit))
 
-    def set_randomness(self,
-                       seed,
-                       diff_rank_seed: bool = False,
-                       deterministic: bool = False) -> None:
+    def set_randomness(
+            self,
+            seed,
+            diff_rank_seed: bool = False,
+            deterministic: bool = False) -> None:
         """Set random seed to guarantee reproducible results.
 
         Args:
@@ -687,10 +725,11 @@ class Runner:
             deterministic=deterministic,
             diff_rank_seed=diff_rank_seed)
 
-    def build_logger(self,
-                     log_level: Union[int, str] = 'INFO',
-                     log_file: str = None,
-                     **kwargs) -> MMLogger:
+    def build_logger(
+            self,
+            log_level: Union[int, str] = 'INFO',
+            log_file: str = None,
+            **kwargs) -> MMLogger:
         """Build a global asscessable MMLogger.
 
         Args:
@@ -711,8 +750,8 @@ class Runner:
 
         return MMLogger.get_instance(**log_cfg)  # type: ignore
 
-    def build_message_hub(self,
-                          message_hub: Optional[Dict] = None) -> MessageHub:
+    def build_message_hub(
+            self, message_hub: Optional[Dict] = None) -> MessageHub:
         """Build a global asscessable MessageHub.
 
         Args:
@@ -800,8 +839,9 @@ class Runner:
             model = MODELS.build(model)
             return model  # type: ignore
         else:
-            raise TypeError('model should be a nn.Module object or dict, '
-                            f'but got {model}')
+            raise TypeError(
+                'model should be a nn.Module object or dict, '
+                f'but got {model}')
 
     def wrap_model(
             self, model_wrapper_cfg: Optional[Dict],
@@ -850,12 +890,13 @@ class Runner:
                 try:
                     model = convert_sync_batchnorm(model, sync_bn)
                 except ValueError as e:
-                    self.logger.error('cfg.sync_bn should be "torch" or '
-                                      f'"mmcv", but got {sync_bn}')
+                    self.logger.error(
+                        'cfg.sync_bn should be "torch" or '
+                        f'"mmcv", but got {sync_bn}')
                     raise e
         if model_wrapper_cfg is None:
-            find_unused_parameters = self.cfg.get('find_unused_parameters',
-                                                  False)
+            find_unused_parameters = self.cfg.get(
+                'find_unused_parameters', False)
             # Sets the `find_unused_parameters` parameter in
             # torch.nn.parallel.DistributedDataParallel
             # TODO: may use a more elegant way to get local device ID.
@@ -888,9 +929,10 @@ class Runner:
             for name, params in model.state_dict().items():
                 broadcast(params)
 
-    def scale_lr(self,
-                 optim_wrapper: OptimWrapper,
-                 auto_scale_lr: Optional[Dict] = None) -> None:
+    def scale_lr(
+            self,
+            optim_wrapper: OptimWrapper,
+            auto_scale_lr: Optional[Dict] = None) -> None:
         """Automatically scaling learning rate in training according to the
         ratio of ``base_batch_size`` in ``autoscalelr_cfg`` and real batch
         size.
@@ -922,9 +964,10 @@ class Runner:
         real_bs = self.world_size * bs
         base_bs = auto_scale_lr['base_batch_size']
         ratio = float(real_bs) / float(base_bs)
-        self.logger.info(f'LR is set based on batch size of {base_bs} '
-                         f'and the current batch size is {real_bs}. '
-                         f'Scaling the original LR by {ratio}.')
+        self.logger.info(
+            f'LR is set based on batch size of {base_bs} '
+            f'and the current batch size is {real_bs}. '
+            f'Scaling the original LR by {ratio}.')
 
         def _is_built(schedulers):
             if isinstance(schedulers, dict):
@@ -935,9 +978,10 @@ class Runner:
             return isinstance(schedulers, _ParamScheduler)
 
         if _is_built(self.param_schedulers):
-            raise RuntimeError('`scale_lr` should be called before building '
-                               'ParamScheduler because ParamScheduler will '
-                               'store initial lr from optimizer wrappers')
+            raise RuntimeError(
+                '`scale_lr` should be called before building '
+                'ParamScheduler because ParamScheduler will '
+                'store initial lr from optimizer wrappers')
 
         assert isinstance(optim_wrapper, OptimWrapper), \
             '`scale_lr should be called after building OptimWrapper'
@@ -1093,8 +1137,9 @@ class Runner:
                     optim_wrappers[name] = optim
                 return OptimWrapperDict(**optim_wrappers)
         else:
-            raise TypeError('optimizer wrapper should be an OptimWrapper '
-                            f'object or dict, but got {optim_wrapper}')
+            raise TypeError(
+                'optimizer wrapper should be an OptimWrapper '
+                f'object or dict, but got {optim_wrapper}')
 
     def _build_param_scheduler(
             self, scheduler: Union[_ParamScheduler, Dict, List],
@@ -1239,8 +1284,8 @@ class Runner:
 
             return param_schedulers
 
-    def build_evaluator(self, evaluator: Union[Dict, List,
-                                               Evaluator]) -> Evaluator:
+    def build_evaluator(
+            self, evaluator: Union[Dict, List, Evaluator]) -> Evaluator:
         """Build evaluator.
 
         Examples of ``evaluator``::
@@ -1288,9 +1333,10 @@ class Runner:
                 f', but got {evaluator}')
 
     @staticmethod
-    def build_dataloader(dataloader: Union[DataLoader, Dict],
-                         seed: Optional[int] = None,
-                         diff_rank_seed: bool = False) -> DataLoader:
+    def build_dataloader(
+            dataloader: Union[DataLoader, Dict],
+            seed: Optional[int] = None,
+            diff_rank_seed: bool = False) -> DataLoader:
         """Build dataloader.
 
         The method builds three components:
@@ -1379,8 +1425,9 @@ class Runner:
         # `persistent_workers` requires pytorch version >= 1.7
         if ('persistent_workers' in dataloader_cfg
                 and digit_version(TORCH_VERSION) < digit_version('1.7.0')):
-            warnings.warn('`persistent_workers` is only available when '
-                          'pytorch version >= 1.7')
+            warnings.warn(
+                '`persistent_workers` is only available when '
+                'pytorch version >= 1.7')
             dataloader_cfg.pop('persistent_workers')
 
         # The default behavior of `collat_fn` in dataloader is to
@@ -1388,8 +1435,8 @@ class Runner:
         # However, in mmengine, if `collate_fn` is not defined in
         # dataloader_cfg, `pseudo_collate` will only convert the list of
         # samples into a dict without stacking the batch tensor.
-        collate_fn_cfg = dataloader_cfg.pop('collate_fn',
-                                            dict(type='pseudo_collate'))
+        collate_fn_cfg = dataloader_cfg.pop(
+            'collate_fn', dict(type='pseudo_collate'))
         collate_fn_type = collate_fn_cfg.pop('type')
         collate_fn = COLLATE_FUNCTIONS.get(collate_fn_type)
         collate_fn = partial(collate_fn, **collate_fn_cfg)  # type: ignore
@@ -1620,7 +1667,7 @@ class Runner:
             self._has_loaded = True
 
     def train(self) -> nn.Module:
-        """Launch training.
+        """Launch training.  训练流程
 
         Returns:
             nn.Module: The model after training.
@@ -1680,7 +1727,7 @@ class Runner:
         return model
 
     def val(self) -> dict:
-        """Launch validation.
+        """Launch validation. 验证流程
 
         Returns:
             dict: A dict of metrics on validation set.
@@ -1703,7 +1750,7 @@ class Runner:
         return metrics
 
     def test(self) -> dict:
-        """Launch test.
+        """Launch test. 测试流程
 
         Returns:
             dict: A dict of metrics on testing set.
@@ -1895,11 +1942,12 @@ class Runner:
         if custom_hooks is not None:
             self.register_custom_hooks(custom_hooks)
 
-    def resume(self,
-               filename: str,
-               resume_optimizer: bool = True,
-               resume_param_scheduler: bool = True,
-               map_location: Union[str, Callable] = 'default') -> None:
+    def resume(
+            self,
+            filename: str,
+            resume_optimizer: bool = True,
+            resume_param_scheduler: bool = True,
+            map_location: Union[str, Callable] = 'default') -> None:
         """Resume model from checkpoint.
 
         Args:
@@ -1948,10 +1996,11 @@ class Runner:
         current_seed = self._randomness_cfg.get('seed')
         if resumed_seed is not None and resumed_seed != current_seed:
             if current_seed is not None:
-                warnings.warn(f'The value of random seed in the '
-                              f'checkpoint "{resumed_seed}" is '
-                              f'different from the value in '
-                              f'`randomness` config "{current_seed}"')
+                warnings.warn(
+                    f'The value of random seed in the '
+                    f'checkpoint "{resumed_seed}" is '
+                    f'different from the value in '
+                    f'`randomness` config "{current_seed}"')
             self._randomness_cfg.update(seed=resumed_seed)
             self.set_randomness(**self._randomness_cfg)
 
@@ -2002,11 +2051,12 @@ class Runner:
 
         self.logger.info(f'resumed epoch: {self.epoch}, iter: {self.iter}')
 
-    def load_checkpoint(self,
-                        filename: str,
-                        map_location: Union[str, Callable] = 'cpu',
-                        strict: bool = False,
-                        revise_keys: list = [(r'^module.', '')]):
+    def load_checkpoint(
+            self,
+            filename: str,
+            map_location: Union[str, Callable] = 'cpu',
+            strict: bool = False,
+            revise_keys: list = [(r'^module.', '')]):
         """Load checkpoint from given ``filename``.
 
         Args:
@@ -2262,13 +2312,13 @@ class Runner:
         runtime_env['Distributed training'] = self._distributed
         runtime_env['GPU number'] = self._world_size
 
-        env_info = '\n    ' + '\n    '.join(f'{k}: {v}'
-                                            for k, v in env.items())
+        env_info = '\n    ' + '\n    '.join(
+            f'{k}: {v}' for k, v in env.items())
         runtime_env_info = '\n    ' + '\n    '.join(
             f'{k}: {v}' for k, v in runtime_env.items())
         dash_line = '-' * 60
-        self.logger.info('\n' + dash_line + '\nSystem environment:' +
-                         env_info + '\n'
-                         '\nRuntime environment:' + runtime_env_info + '\n' +
-                         dash_line + '\n')
+        self.logger.info(
+            '\n' + dash_line + '\nSystem environment:' + env_info + '\n'
+            '\nRuntime environment:' + runtime_env_info + '\n' + dash_line +
+            '\n')
         self.logger.info(f'Config:\n{self.cfg.pretty_text}')

@@ -68,6 +68,8 @@ class BaseMetric(metaclass=ABCMeta):
             data_samples (Sequence[dict]): A batch of outputs from
                 the model.
         """
+        # 接受数据集的输出和模型 mode="predict"时的输出，此时的数据为一个批次的数据，
+        # 对这一批次的数据进行处理后，保存信息到self.results属性
 
     @abstractmethod
     def compute_metrics(self, results: list) -> dict:
@@ -80,6 +82,9 @@ class BaseMetric(metaclass=ABCMeta):
             dict: The computed metrics. The keys are the names of the metrics,
             and the values are corresponding results.
         """
+        #  compute_metrics 接受 results 参数，这一参数的输入为 process 中保存的所有信息
+        #  （如果是分布式环境，results 中为已收集的，包括各个进程 process 保存信息的结果），
+        #  利用这些信息计算并返回保存有评测指标结果的字典
 
     def evaluate(self, size: int) -> dict:
         """Evaluate the model performance of the whole dataset after processing
