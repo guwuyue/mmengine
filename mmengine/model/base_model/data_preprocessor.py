@@ -14,7 +14,14 @@ from ..utils import stack_batch
 CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str,
                  None]
 
-
+"""
+数据预处理器 DataPreprocessor
+DataPreprocessor 在 Model 与 Dataloader 之间建立了一种桥接关系，可以按需执行数据的 搬运、增强、转换 等操作。
+根据官方 模型（Model） 描述，DataPreprocessor 至少可以完成如下功能：
+1.执行数据搬运（如 CPU -> GPU）和归一化等功能
+2.执行数据批增强（BatchAugmentation），适用于 MixUp、Mosaic 这种需要融合多张图像的情况
+3.承担类型转换功能（DataLoader 的输出和模型的输入类型之间）
+"""
 @MODELS.register_module()
 class BaseDataPreprocessor(nn.Module):
     """Base data pre-processor used for copying data to the target device.

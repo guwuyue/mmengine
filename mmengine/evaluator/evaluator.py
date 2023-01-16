@@ -43,7 +43,8 @@ class Evaluator:
                 data_batch: Optional[Any] = None):
         """Convert ``BaseDataSample`` to dict and invoke process method of each
         metric.
-
+        evaluator.process() 实际会去调用 metric.process() 方法，
+        其输入参数为 dataloader 返回的 data_batch 、包含了模型预测结果 predictions 与验证集 ground truth 数据的 _data_samples
         Args:
             data_samples (Sequence[BaseDataElement]): predictions of the model,
                 and the ground truth of the validation set.
@@ -76,7 +77,7 @@ class Evaluator:
         """
         metrics = {}
         for metric in self.metrics:
-            _results = metric.evaluate(size)
+            _results = metric.evaluate(size)  #
 
             # Check metric name conflicts
             for name in _results.keys():

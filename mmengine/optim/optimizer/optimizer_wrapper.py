@@ -246,7 +246,7 @@ class OptimWrapper:
 
     def state_dict(self) -> dict:
         """A wrapper of ``Optimizer.state_dict``.
-
+        批量导出状态字典，这一点在管理多个优化器的时候会非常方便
         Provide unified ``state_dict`` interface compatible with automatic
         mixed precision training. Subclass can overload this method to
         implement the required logic. For example, the state dictionary of
@@ -260,7 +260,7 @@ class OptimWrapper:
     def load_state_dict(self, state_dict: dict) -> None:
         """A wrapper of ``Optimizer.load_state_dict``. load the state dict of
         :attr:`optimizer`.
-
+        批量加载状态字典，这一点在管理多个优化器的时候会非常方便
         Provide unified ``load_state_dict`` interface compatible with automatic
         mixed precision training. Subclass can overload this method to
         implement the required logic. For example, the state dictionary of
@@ -294,7 +294,7 @@ class OptimWrapper:
         return self.optimizer.defaults
 
     def get_lr(self) -> Dict[str, List[float]]:
-        """Get the learning rate of the optimizer.
+        """Get the learning rate of the optimizer.  统一获取学习率
 
         Provide unified interface to get learning rate of optimizer.
 
@@ -305,7 +305,7 @@ class OptimWrapper:
         return dict(lr=lr)
 
     def get_momentum(self) -> Dict[str, List[float]]:
-        """Get the momentum of the optimizer.
+        """Get the momentum of the optimizer.  统一获取动量
 
         Provide unified interface to get momentum of optimizer.
 
@@ -328,7 +328,7 @@ class OptimWrapper:
     def optim_context(self, model: nn.Module):
         """A Context for gradient accumulation and automatic mix precision
         training.
-
+        实现混合精度训练
         If subclasses need to enable the context for mix precision training,
         e.g., ``:class:`AmpOptimWrapper``,  the corresponding context should be
         enabled in `optim_context`. Since ``OptimWrapper`` uses default fp32
@@ -355,7 +355,7 @@ class OptimWrapper:
             yield
 
     def _clip_grad(self) -> None:
-        """Clip the gradients of parameters."""
+        """Clip the gradients of parameters. 实现梯度剪裁功能"""
         params: List[torch.Tensor] = []
         for param_group in self.optimizer.param_groups:
             params.extend(param_group['params'])
@@ -407,7 +407,7 @@ class OptimWrapper:
     def should_update(self) -> bool:
         """Decide whether the parameters should be updated at the current
         iteration.
-
+        实现梯度累加
         Called by :meth:`update_params` and check whether the optimizer
         wrapper should update parameters at current iteration.
 

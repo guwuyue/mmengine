@@ -1722,7 +1722,7 @@ class Runner:
             self._train_loop.iter,  # type: ignore
             self._train_loop.max_iters)  # type: ignore
 
-        model = self.train_loop.run()  # type: ignore  train 流程调用
+        model = self.train_loop.run()  # type: ignore # train 流程调用
         self.call_hook('after_run')
         return model
 
