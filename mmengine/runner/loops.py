@@ -17,7 +17,7 @@ from .utils import calc_dynamic_intervals
 @LOOPS.register_module()
 class EpochBasedTrainLoop(BaseLoop):
     """Loop for epoch-based training.
-
+    EpochBasedTrainLoop 类实际上是继承了基类 BaseLoop
     Args:
         runner (Runner): A reference of runner.
         dataloader (Dataloader or dict): A dataloader object or a dict to
@@ -83,7 +83,7 @@ class EpochBasedTrainLoop(BaseLoop):
         return self._iter
 
     def run(self) -> torch.nn.Module:
-        """Launch training."""
+        """Launch training. """
         self.runner.call_hook('before_train')
 
         while self._epoch < self._max_epochs:
@@ -109,7 +109,7 @@ class EpochBasedTrainLoop(BaseLoop):
         self._epoch += 1
 
     def run_iter(self, idx, data_batch: Sequence[dict]) -> None:
-        """Iterate one min-batch.
+        """Iterate one min-batch.  run_iter 中可以明显看出，最底层会调用 model.train_step 方法
 
         Args:
             data_batch (Sequence[dict]): Batch of data from dataloader.
@@ -339,7 +339,12 @@ class ValLoop(BaseLoop):
         self.fp16 = fp16
 
     def run(self) -> dict:
-        """Launch validation."""
+        """Launch validation.  """
+        """
+        这里与EpochBasedTrainLoop很明显的一个差异在于：
+            多了个 evaluator ：初始话阶段会实现其实例化操作， run() 方法会调用 evaluator.evaluate() 来计算最终的 metrics，
+            同时在 run_iter() 方法中会调用 evaluator.process() 实现每个 iteration 的数据处理工作
+        """
         self.runner.call_hook('before_val')
         self.runner.call_hook('before_val_epoch')
         self.runner.model.eval()

@@ -1450,8 +1450,8 @@ class Runner:
         return data_loader
 
     def build_train_loop(self, loop: Union[BaseLoop, Dict]) -> BaseLoop:
-        """Build training loop.
-
+        """Build training loop.  train 流程构建
+        训练流程的构建主要涉及 EpochBasedTrainLoop 与 IterBasedTrainLoop 两种循环结构，分别对应按照 epoch 与 iteration 两种训练方式
         Examples of ``loop``::
 
             # `EpochBasedTrainLoop` will be used
@@ -1499,7 +1499,7 @@ class Runner:
         return loop  # type: ignore
 
     def build_val_loop(self, loop: Union[BaseLoop, Dict]) -> BaseLoop:
-        """Build validation loop.
+        """Build validation loop.  val 流程构建
 
         Examples of ``loop``:
 
@@ -1722,7 +1722,7 @@ class Runner:
             self._train_loop.iter,  # type: ignore
             self._train_loop.max_iters)  # type: ignore
 
-        model = self.train_loop.run()  # type: ignore
+        model = self.train_loop.run()  # type: ignore  train 流程调用
         self.call_hook('after_run')
         return model
 
@@ -1745,7 +1745,7 @@ class Runner:
         # make sure checkpoint-related hooks are triggered after `before_run`
         self.load_or_resume()
 
-        metrics = self.val_loop.run()  # type: ignore
+        metrics = self.val_loop.run()  # type: ignore  val 流程调用
         self.call_hook('after_run')
         return metrics
 

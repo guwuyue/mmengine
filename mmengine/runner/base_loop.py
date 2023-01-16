@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 class BaseLoop(metaclass=ABCMeta):
     """Base loop class.
-
+    完成了 train_dataloader 的真正实例化操作，并且定义了抽象方法 run() 。
     All subclasses inherited from ``BaseLoop`` should overwrite the
     :meth:`run` method.
 
