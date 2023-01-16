@@ -10,8 +10,8 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-examples/work_dir/
-examples/data/
+work_dir/
+data/
 downloads/
 eggs/
 .eggs/
