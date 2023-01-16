@@ -114,10 +114,11 @@ class OptimWrapper:
         >>>     optim_wrapper.update_params(loss)
     """
 
-    def __init__(self,
-                 optimizer: Optimizer,
-                 accumulative_counts: int = 1,
-                 clip_grad: Optional[dict] = None):
+    def __init__(
+            self,
+            optimizer: Optimizer,
+            accumulative_counts: int = 1,
+            clip_grad: Optional[dict] = None):
         assert accumulative_counts > 0, (
             '_accumulative_counts at least greater than or equal to 1')
         self._accumulative_counts = accumulative_counts
@@ -141,12 +142,14 @@ class OptimWrapper:
                 self.clip_func = torch.nn.utils.clip_grad_value_
                 self.grad_name = 'grad_value'
             else:
-                raise ValueError('type of clip_grad should be "norm" or '
-                                 f'"value" but got {clip_type}')
-            assert clip_grad, ('`clip_grad` should contain other arguments '
-                               'besides `type`. The arguments should match '
-                               'with the `torch.nn.utils.clip_grad_norm_` or '
-                               'clip_grad_value_`')
+                raise ValueError(
+                    'type of clip_grad should be "norm" or '
+                    f'"value" but got {clip_type}')
+            assert clip_grad, (
+                '`clip_grad` should contain other arguments '
+                'besides `type`. The arguments should match '
+                'with the `torch.nn.utils.clip_grad_norm_` or '
+                'clip_grad_value_`')
         self.clip_grad_kwargs = clip_grad
         # Used to update `grad_norm` log message.
         self.message_hub = MessageHub.get_current_instance()
@@ -161,10 +164,11 @@ class OptimWrapper:
         # the loss factor will always be the same as `_accumulative_counts`.
         self._remainder_counts = -1
 
-    def update_params(self,
-                      loss: torch.Tensor,
-                      step_kwargs: Optional[Dict] = None,
-                      zero_kwargs: Optional[Dict] = None) -> None:
+    def update_params(
+            self,
+            loss: torch.Tensor,
+            step_kwargs: Optional[Dict] = None,
+            zero_kwargs: Optional[Dict] = None) -> None:
         """Update parameters in :attr:`optimizer`.
 
         Args:
@@ -362,11 +366,11 @@ class OptimWrapper:
             grad = self.clip_func(params, **self.clip_grad_kwargs)
             # `torch.nn.utils.clip_grad_value_` will return None.
             if grad is not None:
-                self.message_hub.update_scalar(f'train/{self.grad_name}',
-                                               float(grad))
+                self.message_hub.update_scalar(
+                    f'train/{self.grad_name}', float(grad))
 
-    def initialize_count_status(self, model: nn.Module, init_counts: int,
-                                max_counts: int) -> None:
+    def initialize_count_status(
+            self, model: nn.Module, init_counts: int, max_counts: int) -> None:
         """Initialize gradient accumulation related attributes.
 
         ``OptimWrapper`` can be used without calling
@@ -410,8 +414,9 @@ class OptimWrapper:
         Returns:
             bool: Whether to update parameters.
         """
-        return (self._inner_count % self._accumulative_counts == 0
-                or self._inner_count == self._max_counts)
+        return (
+            self._inner_count % self._accumulative_counts == 0
+            or self._inner_count == self._max_counts)
 
     def should_sync(self) -> bool:
         """Decide whether the automatic gradient synchronization should be
@@ -428,8 +433,9 @@ class OptimWrapper:
         Returns:
             bool: Whether to block the automatic gradient synchronization.
         """
-        return ((self._inner_count + 1) % self._accumulative_counts == 0
-                or (self._inner_count + 1) == self._max_counts)
+        return (
+            (self._inner_count + 1) % self._accumulative_counts == 0
+            or (self._inner_count + 1) == self._max_counts)
 
     def scale_loss(self, loss: torch.Tensor) -> torch.Tensor:
         """Get scaled loss according to ``_accumulative_counts``,
@@ -472,8 +478,9 @@ class OptimWrapper:
         return self._inner_count
 
     def __repr__(self):
-        wrapper_info = (f'Type: {type(self).__name__}\n'
-                        f'_accumulative_counts: {self._accumulative_counts}\n'
-                        'optimizer: \n')
+        wrapper_info = (
+            f'Type: {type(self).__name__}\n'
+            f'_accumulative_counts: {self._accumulative_counts}\n'
+            'optimizer: \n')
         optimizer_str = repr(self.optimizer) + '\n'
         return wrapper_info + optimizer_str
